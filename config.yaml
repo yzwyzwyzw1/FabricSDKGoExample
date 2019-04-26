@@ -1,0 +1,303 @@
+name: "fixtures_default"
+# Describe what the target network is/does.
+description: "The network which will host my first blockchain"
+# Schema version of the content. Used by the SDK to apply the corresponding parsing rules.
+version: 1.0.0
+# The client section used by GO SDK.
+client:
+  # Which organization does this application instance belong to? The value must be the name of an org
+  organization: Org1
+  logging:
+    level: info
+
+  # Global configuration for peer, event service and orderer timeouts
+#  peer:
+#    timeout:
+#      connection: 3s
+#      queryResponse: 45s
+#      executeTxResponse: 30s
+#  eventService:
+#    timeout:
+#      connection: 3s
+#      registrationResponse: 3s
+#  orderer:
+#    timeout:
+#      connection: 3s
+#      response: 5s
+
+  # Root of the MSP directories with keys and certs. The Membership Service Providers is component that aims to offer an abstraction of a membership operation architecture.
+  cryptoconfig:
+    path: ${GOPATH}/src/github.com/blockchaintest.com/FabricSDKGoExample/fixtures/crypto-config
+
+  # Some SDKs support pluggable KV stores, the properties under "credentialStore" are implementation specific
+  credentialStore:
+    path: /tmp/exp-store
+
+    # [Optional]. Specific to the CryptoSuite implementation used by GO SDK. Software-based implementations requiring a key store.PKCS#11 based implementations does not.
+    cryptoStore:
+      path: /tmp/exp-msp
+
+  # BCCSP config for the client. Used by GO SDK. It's the Blockchain Cryptographic Service Provider.
+  # It offers the implementation of cryptographic standards and algorithms.
+  BCCSP:
+    security:
+      enabled: true
+      default:
+        provider: "SW"
+      hashAlgorithm: "SHA2"
+      softVerify: true
+      ephemeral: false
+      level: 256
+
+  tlsCerts:
+    systemCertPool: false
+      # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+
+
+      # [Optional]. Client key and cert for TLS handshake with peers and orderers
+    client:
+      key:
+        path:
+      cert:
+        path:
+
+# [Optional]. But most apps would have this section so that channel objects can be constructed based on the content below.
+# If one of your application is creating channels, you might not use this
+channels:
+  mychannel:   # 如果你修改通道名，那么此处也需要修改
+    #orderers:
+    #  - orderer.example.com
+
+    # Network entity which maintains a ledger and runs chaincode containers in order to perform operations to the ledger. Peers are owned and maintained by members.
+
+    peers:
+      peer0.org1.example.com:
+        # [Optional]. will this peer be sent transaction proposals for endorsement? The peer must
+        # have the chaincode installed. The app can also use this property to decide which peers
+        # to send the chaincode install request. Default: true
+        endorsingPeer: true
+
+        # [Optional]. will this peer be sent query proposals? The peer must have the chaincode
+        # installed. The app can also use this property to decide which peers to send the
+        # chaincode install request. Default: true
+
+        chaincodeQuery: true
+        # [Optional]. will this peer be sent query proposals that do not require chaincodes, like
+        # queryBlock(), queryTransaction(), etc. Default: true
+
+        ledgerQuery: true
+        # [Optional]. will this peer be the target of the SDK's listener registration? All peers can
+        # produce events but the app typically only needs to connect to one to listen to events.
+        # Default: true
+        eventSource: true
+      peer1.org1.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
+    policies:
+      #[Optional] options for retrieving channel configuration blocks
+      queryChannelConfig:
+        #[Optional] min number of success responses (from targets/peers)
+        minResponses: 1
+        #[Optional] channel config will be retrieved for these number of random targets
+        maxTargets: 1
+        #[Optional] retry options for query config block
+        retryOpts:
+          #[Optional] number of retry attempts
+          attempts: 5
+          #[Optional] the back off interval for the first retry attempt
+          #initialBackoff: 500ms
+          initialBackoff: 500ms
+          #[Optional] the maximum back off interval for any retry attempt
+          maxBackoff: 5s
+          #[Optional] he factor by which the initial back off period is exponentially incremented
+          backoffFactor: 2.0
+      #[Optional] options for retrieving discovery info
+      discovery:
+        #[Optional] discovery info will be retrieved for these number of random targets
+        maxTargets: 2
+        #[Optional] retry options for retrieving discovery info
+        retryOpts:
+          #[Optional] number of retry attempts
+          attempts: 4
+          #[Optional] the back off interval for the first retry attempt
+          #initialBackoff: 500ms
+          initialBackoff: 500ms
+          #[Optional] the maximum back off interval for any retry attempt
+          maxBackoff: 5s
+          #[Optional] he factor by which the initial back off period is exponentially incremented
+          backoffFactor: 2.0
+      #[Optional] options for the event service
+      eventService:
+        # [Optional] resolverStrategy specifies the peer resolver strategy to use when connecting to a peer
+        # Possible values: [PreferOrg (default), MinBlockHeight, Balanced]
+        #
+        # PreferOrg:
+        #   Determines which peers are suitable based on block height lag threshold, although will prefer the peers in the
+        #   current org (as long as their block height is above a configured threshold). If none of the peers from the current org
+        #   are suitable then a peer from another org is chosen.
+        # MinBlockHeight:
+        #   Chooses the best peer according to a block height lag threshold. The maximum block height of all peers is
+        #   determined and the peers whose block heights are under the maximum height but above a provided "lag" threshold are load
+        #   balanced. The other peers are not considered.
+        # Balanced:
+        #   Chooses peers using the configured balancer.
+        resolverStrategy: PreferOrg
+        # [Optional] balancer is the balancer to use when choosing a peer to connect to
+        # Possible values: [Random (default), RoundRobin]
+        balancer: Random
+        # [Optional] blockHeightLagThreshold sets the block height lag threshold. This value is used for choosing a peer
+        # to connect to. If a peer is lagging behind the most up-to-date peer by more than the given number of
+        # blocks then it will be excluded from selection.
+        # If set to 0 then only the most up-to-date peers are considered.
+        # If set to -1 then all peers (regardless of block height) are considered for selection.
+        # Default: 5
+        blockHeightLagThreshold: 5
+        # [Optional] reconnectBlockHeightLagThreshold - if >0 then the event client will disconnect from the peer if the peer's
+        # block height falls behind the specified number of blocks and will reconnect to a better performing peer.
+        # If set to 0 then this feature is disabled.
+        # Default: 10
+        # NOTES:
+        #   - peerMonitorPeriod must be >0 to enable this feature
+        #   - Setting this value too low may cause the event client to disconnect/reconnect too frequently, thereby
+        #     affecting performance.
+        reconnectBlockHeightLagThreshold: 10
+        # [Optional] peerMonitorPeriod is the period in which the connected peer is monitored to see if
+        # the event client should disconnect from it and reconnect to another peer.
+        # Default: 0 (disabled)
+        peerMonitorPeriod: 5s
+
+  # List of participating organizations in this network
+organizations:
+  Org1:
+    mspid: org1.example.com
+    #mspid: org1.example.com
+    cryptoPath: peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
+    # if {UserName} or User1 --->failed to create resmgmt client due to context error: user not found
+    peers:
+      - peer0.org1.example.com
+      - peer1.org1.example.com
+    certificateAuthorities:
+      - ca.org1.example.com
+
+
+#    # Orderer Org name
+#    ordererorg:
+#      # Membership Service Provider ID for this organization
+#      mspID: OrdererMSP
+#
+#      # Needed to load users crypto keys and certs for this org (absolute path or relative to global crypto path, DEV mode)
+#      cryptoPath: ordererOrganizations/example.com/users/{username}@example.com/msp
+
+# List of orderers to send transaction and channel create/updaterequests to.
+# The orderers consent on the order of transactions in a block to be committed to the ledger. For the time being only one orderer is needed.
+
+orderers:
+  orderer.example.com:
+    url: localhost:7050
+    #url:  orderer.example.com:7050
+
+    grpcOptions:
+      ssl-target-name-override: orderer.example.com
+      #grpc-max-send-message-length: 15
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      ail-fast: false
+      # allow-insecure will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
+      allow-insecure: false
+
+    tlsCACerts:
+      path: ${GOPATH}/src/github.com/blockchaintest.com/FabricSDKGoExample/fixtures/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
+# List of peers to send various requests to, including endorsement,query and event listener registration.
+
+peers:
+  peer0.org1.example.com:
+    # this URL is used to send endorsement and query requests
+    url: localhost:7051
+    # this URL is used to connect the EventHub and registering event listeners
+    eventUrl: localhost:7053
+    #url: 172.25.0.5:7051
+    #eventUrl:  172.25.0.5:7053
+    # These parameters should be set in coordination with the keepalive policy on the server
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.example.com
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      # allow-insecure will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
+      allow-insecure: false
+    tlsCACerts:
+      path: ${GOPATH}/src/github.com/blockchaintest.com/FabricSDKGoExample/fixtures/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+
+  peer1.org1.example.com:
+    url: localhost:7151
+    eventUrl: localhost:7153
+    #url: 172.25.0.5:7151
+    #eventUrl: 172.25.0.5:7153
+    grpcOptions:
+      ssl-target-name-override: peer1.org1.example.com
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      # allow-insecure will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
+      allow-insecure: false
+    tlsCACerts:
+      # Certificate location absolute path
+      path: ${GOPATH}/src/github.com/blockchaintest.com/FabricSDKGoExample/fixtures/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+# Fabric-CA is a special kind of Certificate Authority provided by Hyperledger Fabric which allows certificate management to be done via REST APIs.
+
+certificateAuthorities:
+  ca.org1.example.com:
+    url: http://localhost:7054
+    # the properties specified under this object are passed to the 'http' client verbatim when making the request to the Fabric-CA server
+    tlsCACerts:
+      # Comma-Separated list of paths
+      path: ${GOPATH}/src/github.com/blockchaintest.com/FabricSDKGoExample/fixtures/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+
+#    client:
+#      key:
+#        path: ${GOPATH}/src/github.com/hyperledger/fabric-sdk-go/${CRYPTOCONFIG_FIXTURES_PATH}/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls/client.key
+#      cert:
+#        path: ${GOPATH}/src/github.com/hyperledger/fabric-sdk-go/${CRYPTOCONFIG_FIXTURES_PATH}/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls/client.crt
+#
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    caName: ca.org1.example.com
+
+entityMatchers:
+  peer:
+    - pattern: (\w*)peer0.org1.example.com(\w*)
+      urlSubstitutionExp: localhost:7051
+      eventUrlSubstitutionExp: localhost:7053
+      #urlSubstitutionExp: 172.25.0.5:7051
+      #eventUrlSubstitutionExp: 172.25.0.5:7053
+      sslTargetOverrideUrlSubstitutionExp: peer0.org1.example.com
+      mappedHost: peer0.org1.example.com
+
+    - pattern: (\w*)peer1.org1.example.com(\w*)
+      urlSubstitutionExp: localhost:7151
+      eventUrlSubstitutionExp: localhost:7153
+      #urlSubstitutionExp: 172.25.0.5:7151
+      #eventUrlSubstitutionExp: 172.25.0.5:7153
+      sslTargetOverrideUrlSubstitutionExp: peer1.org1.example.com
+      mappedHost: peer1.org1.example.com
+
+  orderer:
+    - pattern: (\w*)orderer.example.com(\w*)
+      urlSubstitutionExp: localhost:7050
+      #urlSubstitutionExp: 172.25.0.5:7050
+      sslTargetOverrideUrlSubstitutionExp: orderer.example.com
+      mappedHost: orderer.example.com
+
+  certificateAuthorities:
+    - pattern: (\w*)ca.org1.example.com(\w*)
+      urlSubstitutionExp: http://localhost:7054
+      #urlSubstitutionExp: ca.org1.example.com:7054
+      sslTargetOverrideUrlSubstitutionExp: ca.org1.example.com
+      mappedHost: ca.org1.example.com

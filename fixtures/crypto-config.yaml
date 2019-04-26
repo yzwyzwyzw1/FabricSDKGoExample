@@ -1,0 +1,21 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+OrdererOrgs:
+  - Name: Orderer
+    Domain: example.com  #这个一般是写组织名，它需要和orderer ID相同，可以说orderer ID 就是填写组织名
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: Org1
+    Domain: org1.example.com
+    EnableNodeOUs: false
+    Specs:
+      - Hostname: peer0
+      - Hostname: peer1
+      - Hostname: ca
+    Users:
+      Count: 5
